@@ -1,0 +1,302 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+  TEACHER
+  CONTENT_MANAGER
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  NUMERICAL
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+  ABANDONED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(USER)
+  image        String?
+  isBlocked    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  attempts     Attempt[]
+  bookmarks    Bookmark[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  exams       Exam[]
+
+  @@index([slug])
+}
+
+model Exam {
+  id          String    @id @default(cuid())
+  categoryId  String
+  title       String
+  slug        String    @unique
+  code        String?
+  description String?
+  icon        String?
+  isPublished Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tests       Test[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isPublished])
+}
+
+model Subject {
+  id          String     @id @default(cuid())
+  name        String
+  code        String?    @unique
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  topics      Topic[]
+  questions   Question[]
+
+  @@index([name])
+}
+
+model Topic {
+  id          String     @id @default(cuid())
+  subjectId   String
+  name        String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  subject     Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  questions   Question[]
+
+  @@index([subjectId])
+}
+
+model Test {
+  id                 String        @id @default(cuid())
+  examId             String
+  title              String
+  slug               String        @unique
+  description        String?
+  instructions       String?
+  durationMinutes    Int           @default(60)
+  totalMarks         Float         @default(100.0)
+  passPercentage     Float         @default(40.0)
+  positiveMarksPerQ  Float         @default(2.0)
+  negativeMarksPerQ  Float         @default(0.5)
+  isNegativeMarking  Boolean       @default(true)
+  isPublished        Boolean       @default(true)
+  isFree             Boolean       @default(true)
+  randomQuestionOrder Boolean      @default(false)
+  randomOptionOrder  Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  exam               Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  sections           TestSection[]
+  testQuestions      TestQuestion[]
+  attempts           Attempt[]
+  bookmarks          Bookmark[]
+
+  @@index([examId])
+  @@index([slug])
+  @@index([isPublished])
+}
+
+model TestSection {
+  id             String         @id @default(cuid())
+  testId         String
+  title          String
+  orderIndex     Int            @default(0)
+  positiveMarks  Float          @default(2.0)
+  negativeMarks  Float          @default(0.5)
+  totalQuestions Int            @default(0)
+  instructions   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  test           Test           @relation(fields: [testId], references: [id], onDelete: Cascade)
+  testQuestions  TestQuestion[]
+
+  @@index([testId])
+  @@index([orderIndex])
+}
+
+model Question {
+  id                   String           @id @default(cuid())
+  subjectId            String
+  topicId              String?
+  questionEn           String
+  questionHi           String?
+  explanationEn        String?
+  explanationHi        String?
+  difficulty           Difficulty       @default(MEDIUM)
+  type                 QuestionType     @default(SINGLE_CHOICE)
+  defaultMarks         Float            @default(2.0)
+  defaultNegativeMarks Float            @default(0.5)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  subject              Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topic                Topic?           @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  options              QuestionOption[]
+  testQuestions        TestQuestion[]
+  attemptAnswers       AttemptAnswer[]
+  bookmarks            Bookmark[]
+
+  @@index([subjectId])
+  @@index([topicId])
+  @@index([difficulty])
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  optionKey  String   // "A", "B", "C", "D"
+  contentEn  String
+  contentHi  String?
+  isCorrect  Boolean  @default(false)
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, optionKey])
+  @@index([questionId])
+}
+
+model TestQuestion {
+  id            String       @id @default(cuid())
+  testId        String
+  sectionId     String?
+  questionId    String
+  orderIndex    Int          @default(0)
+  marks         Float        @default(2.0)
+  negativeMarks Float        @default(0.5)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  test          Test         @relation(fields: [testId], references: [id], onDelete: Cascade)
+  section       TestSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  question      Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([testId, questionId])
+  @@index([testId])
+  @@index([sectionId])
+  @@index([questionId])
+}
+
+model Attempt {
+  id                   String         @id @default(cuid())
+  userId               String
+  testId               String
+  status               AttemptStatus  @default(IN_PROGRESS)
+  startedAt            DateTime       @default(now())
+  submittedAt          DateTime?
+  expiresAt            DateTime
+  timeSpentSeconds     Int            @default(0)
+  currentQuestionIndex Int            @default(0)
+  currentSectionId     String?
+  score                Float          @default(0)
+  positiveScore        Float          @default(0)
+  negativeScore        Float          @default(0)
+  correctCount         Int            @default(0)
+  incorrectCount       Int            @default(0)
+  unattemptedCount     Int            @default(0)
+  accuracy             Float          @default(0)
+  percentage           Float          @default(0)
+  rank                 Int?
+  totalMarks           Float          @default(0)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  user                 User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test                 Test           @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers              AttemptAnswer[]
+
+  @@index([userId, testId, status])
+  @@index([testId, status])
+  @@index([userId, createdAt])
+}
+
+model AttemptAnswer {
+  id                String    @id @default(cuid())
+  attemptId         String
+  questionId        String
+  sectionId         String?
+  selectedOptionKey String?   // "A", "B", "C", "D" or null
+  markedForReview   Boolean   @default(false)
+  isVisited         Boolean   @default(true)
+  isAnswered        Boolean   @default(false)
+  isCorrect         Boolean?
+  marksAwarded      Float     @default(0)
+  timeSpentSeconds  Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  attempt           Attempt   @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question          Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@index([questionId])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  testId     String?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  test       Test?    @relation(fields: [testId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, questionId])
+  @@index([userId])
+}
