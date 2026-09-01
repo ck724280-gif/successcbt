@@ -1,9 +1,19 @@
 "use client";
 
-import React from "react";
-import { ChevronLeft, ChevronRight, RotateCcw, Bookmark, CheckCircle, Award } from "lucide-react";
+import React, { useState } from "react";
+import {
+  Clock,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+  Zap,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 
 export interface QuestionCanvasProps {
   questionIndex: number;
@@ -16,6 +26,8 @@ export interface QuestionCanvasProps {
     negativeMarks: number;
     questionEn: string;
     questionHi?: string | null;
+    explanationEn?: string | null;
+    explanationHi?: string | null;
     options: Array<{
       id: string;
       optionKey: string;
@@ -33,6 +45,9 @@ export interface QuestionCanvasProps {
   onPrevious: () => void;
   isFirstQuestion: boolean;
   isLastQuestion: boolean;
+  // Optional Solution Mode props
+  isSolutionMode?: boolean;
+  correctOptionKey?: string;
 }
 
 export function QuestionCanvas({
@@ -49,159 +64,187 @@ export function QuestionCanvas({
   onPrevious,
   isFirstQuestion,
   isLastQuestion,
+  isSolutionMode = false,
+  correctOptionKey,
 }: QuestionCanvasProps) {
-  // Determine question and options display text based on language preference
-  const showHindi = selectedLanguage === "hi" && Boolean(question.questionHi);
-  const questionText = showHindi ? question.questionHi! : question.questionEn;
+  const [showSolution, setShowSolution] = useState(isSolutionMode);
+  const [reAttemptMode, setReAttemptMode] = useState(false);
+
+  const isHindi = selectedLanguage === "hi" && Boolean(question.questionHi);
+  const questionText = isHindi ? question.questionHi! : question.questionEn;
+  const explanationText = isHindi && question.explanationHi ? question.explanationHi : question.explanationEn;
 
   return (
-    <div className="flex-1 flex flex-col bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden min-h-[580px]">
-      {/* Top Question Metadata Bar */}
-      <div className="bg-slate-50 border-b border-slate-200 px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="font-extrabold text-base text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-lg shadow-sm">
-            Question {questionIndex + 1} <span className="text-slate-400 font-normal text-xs">of {totalQuestions}</span>
+    <div className="flex-1 flex flex-col bg-white border border-slate-200 rounded-none sm:rounded-xl shadow-xs overflow-hidden min-h-[620px]">
+      {/* 1. Question Meta Bar (Screenshot 4 & 5) */}
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+        {/* Left: Question No & Status */}
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <span className="font-bold text-sm text-slate-900">
+            Question No.{questionIndex + 1}
           </span>
-          {question.subjectName && (
-            <Badge variant="secondary" className="font-semibold text-slate-700">
-              {question.subjectName}
-            </Badge>
-          )}
-          {markedForReview && (
-            <Badge variant="purple" className="flex items-center gap-1 font-bold">
-              <Bookmark className="w-3 h-3 fill-purple-600" />
-              Marked for Review
-            </Badge>
-          )}
-        </div>
 
-        {/* Marks Scheme Info */}
-        <div className="flex items-center gap-2 text-xs font-semibold">
-          <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md">
-            +{question.marks} Correct
+          {/* Testbook Green 'सही' / 'Correct' Badge */}
+          <span className="bg-[#22c55e] text-white font-bold px-2 py-0.5 rounded text-[11px] flex items-center gap-1">
+            सही
           </span>
-          {question.negativeMarks > 0 && (
-            <span className="text-red-700 bg-red-50 border border-red-200 px-2.5 py-1 rounded-md">
-              -{question.negativeMarks} Wrong
+
+          {/* Time spent: आप: 00:29  औसत: 00:26 */}
+          <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
+            <Clock className="w-3 h-3 text-red-500" />
+            <span>आप: 00:29</span>
+            <span className="text-slate-300">•</span>
+            <span>औसत: 00:26</span>
+          </div>
+
+          {/* Marks circle badge: अंक +2 */}
+          <div className="flex items-center gap-1 text-slate-700 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded">
+            <span className="text-slate-500">अंक</span>
+            <span className="w-4 h-4 rounded-full bg-[#22c55e] text-white font-bold flex items-center justify-center text-[10px]">
+              {question.marks}
             </span>
-          )}
+          </div>
+
+          {/* Community Stats Badge: 70% answered correctly */}
+          <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold px-2 py-0.5 rounded text-[11px]">
+            70% answered correctly
+          </span>
         </div>
       </div>
 
-      {/* Main Question Body Canvas */}
+      {/* 2. Main Question Area */}
       <div className="p-6 md:p-8 flex-1 overflow-y-auto space-y-6">
         {/* Question Text */}
-        <div className="text-base md:text-lg font-medium text-slate-900 leading-relaxed space-y-3">
-          <p className="whitespace-pre-wrap">{questionText}</p>
-          
-          {/* If language is Hindi and English is also available, or vice versa, show secondary language optionally */}
-          {selectedLanguage === "hi" && question.questionEn && question.questionEn !== question.questionHi && (
-            <div className="mt-4 pt-3 border-t border-slate-100 text-sm text-slate-500 italic">
-              <span className="font-semibold text-xs text-slate-400 uppercase tracking-wider not-italic block mb-1">
-                English Reference:
-              </span>
-              {question.questionEn}
-            </div>
-          )}
+        <div className="text-base sm:text-lg font-medium text-slate-900 leading-relaxed">
+          {questionText}
         </div>
 
-        {/* Options List */}
+        {/* Options List (Testbook style radio + green highlight for correct) */}
         <div className="space-y-3 pt-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Select one option:
-          </p>
-          <div className="grid grid-cols-1 gap-3">
-            {question.options.map((opt) => {
-              const isSelected = selectedOptionKey === opt.optionKey;
-              const optContent =
-                selectedLanguage === "hi" && opt.contentHi ? opt.contentHi : opt.contentEn;
+          {question.options.map((opt) => {
+            const isSelected = selectedOptionKey === opt.optionKey;
+            const isCorrectAnswer = opt.optionKey === correctOptionKey;
+            const optContent = isHindi && opt.contentHi ? opt.contentHi : opt.contentEn;
 
+            // If in solution mode or correct answer
+            if (isSolutionMode && isCorrectAnswer) {
               return (
                 <div
                   key={opt.id}
-                  onClick={() => onSelectOption(opt.optionKey)}
-                  className={`group relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-150 select-none ${
-                    isSelected
-                      ? "border-blue-600 bg-blue-50/70 shadow-sm"
-                      : "border-slate-200 bg-slate-50/40 hover:border-blue-300 hover:bg-slate-50"
-                  }`}
+                  className="flex items-center gap-3 p-3.5 rounded-lg bg-[#22c55e] text-white font-bold text-sm shadow-xs transition-all"
                 >
-                  {/* Option Letter Circle */}
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 transition-colors ${
-                      isSelected
-                        ? "bg-blue-600 text-white shadow-sm shadow-blue-500/30"
-                        : "bg-white border-2 border-slate-300 text-slate-700 group-hover:border-blue-400 group-hover:text-blue-600"
-                    }`}
-                  >
-                    {opt.optionKey}
-                  </div>
-
-                  {/* Option Text */}
-                  <div className="flex-1 pt-1 text-sm md:text-base font-medium text-slate-800 leading-normal">
-                    {optContent}
-                  </div>
-
-                  {/* Selected Radio Indicator */}
-                  {isSelected && (
-                    <div className="pt-1 text-blue-600 animate-in zoom-in duration-100">
-                      <CheckCircle className="w-5 h-5 fill-blue-600 text-white" />
-                    </div>
-                  )}
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>{optContent}</span>
                 </div>
               );
-            })}
-          </div>
+            }
+
+            return (
+              <div
+                key={opt.id}
+                onClick={() => onSelectOption(opt.optionKey)}
+                className={`flex items-center gap-3 p-3.5 rounded-lg border cursor-pointer select-none transition-all ${
+                  isSelected
+                    ? "border-[#00baf2] bg-[#e5f7fd] text-slate-900 font-semibold"
+                    : "border-slate-200 bg-white hover:bg-slate-50 text-slate-800"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${
+                    isSelected
+                      ? "border-[#00baf2] bg-[#00baf2]"
+                      : "border-slate-400 bg-white"
+                  }`}
+                >
+                  {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+                <span className="text-sm">{optContent}</span>
+              </div>
+            );
+          })}
         </div>
+
+        {/* Re-attempt Mode ON Box (Screenshot 4) */}
+        {reAttemptMode && (
+          <div className="p-4 rounded-lg bg-[#fff8e7] border border-[#ffe082] text-xs text-slate-800 space-y-1">
+            <p className="font-bold text-[#b78103]">Re-attempt mode: ON</p>
+            <p className="text-slate-600">Now You can re-attempt the question</p>
+          </div>
+        )}
+
+        {/* View Solution Button Trigger (if not in solution mode) */}
+        {!showSolution && (
+          <div className="pt-2">
+            <button
+              onClick={() => setShowSolution(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#00baf2] text-[#00baf2] hover:bg-[#e5f7fd] text-xs font-bold transition-colors"
+            >
+              👁 View Solution
+              <span className="text-[11px] text-slate-400 font-normal ml-2">Click here to see the answer now</span>
+            </button>
+          </div>
+        )}
+
+        {/* Detailed Solution Box (Screenshot 5 exact Testbook style) */}
+        {showSolution && explanationText && (
+          <div className="pt-4 border-t border-slate-200 space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-1">
+              Solution
+            </h4>
+
+            <div className="space-y-3 text-xs sm:text-sm text-slate-800 leading-relaxed font-mono">
+              <div className="flex items-center gap-2 font-bold text-sm text-slate-900 font-sans">
+                <Zap className="w-4 h-4 text-amber-500 fill-amber-400" />
+                <span>Shortcut Trick</span>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 font-sans text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+                {explanationText}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Bottom CBT Action Bar */}
-      <div className="bg-slate-50 border-t border-slate-200 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-        {/* Left Actions: Previous & Clear */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="md"
-            onClick={onPrevious}
-            disabled={isFirstQuestion}
-            className="font-semibold text-slate-700 border-slate-300 hover:bg-white"
-          >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Previous
-          </Button>
+      {/* 3. Bottom Testbook Action Bar (Screenshot 4 & 5) */}
+      <div className="bg-white border-t border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+        {/* Left: Previous */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onPrevious}
+          disabled={isFirstQuestion}
+          className="font-bold text-slate-700 rounded-lg px-4 border-slate-300"
+        >
+          Previous
+        </Button>
 
-          <Button
-            variant="ghost"
-            size="md"
-            onClick={onClearResponse}
-            disabled={!selectedOptionKey}
-            className="font-semibold text-slate-600 hover:text-red-600 hover:bg-red-50 text-xs sm:text-sm"
+        {/* Center: Re-attempt toggle switch (Screenshot 4 & 5) */}
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-slate-600">Re-attempt Questions</span>
+          <button
+            type="button"
+            onClick={() => setReAttemptMode(!reAttemptMode)}
+            className={`w-9 h-5 rounded-full transition-colors relative ${
+              reAttemptMode ? "bg-[#00baf2]" : "bg-slate-300"
+            }`}
           >
-            <RotateCcw className="w-3.5 h-3.5 mr-1" />
-            Clear Response
-          </Button>
+            <span
+              className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform ${
+                reAttemptMode ? "right-0.5" : "left-0.5"
+              }`}
+            />
+          </button>
         </div>
 
-        {/* Right Actions: Mark for Review & Save & Next */}
-        <div className="flex items-center gap-2.5">
+        {/* Right: Next / Save and Next */}
+        <div className="flex items-center gap-2">
           <Button
-            variant="review"
-            size="md"
-            onClick={onMarkForReviewAndNext}
-            className="font-bold text-xs sm:text-sm shadow-sm"
-          >
-            <Bookmark className="w-4 h-4 mr-1.5" />
-            Mark for Review & Next
-          </Button>
-
-          <Button
-            variant="primary"
-            size="md"
+            size="sm"
             onClick={onSaveAndNext}
-            className="font-bold text-xs sm:text-sm px-5 shadow-sm shadow-blue-500/20"
+            className="bg-[#00baf2] hover:bg-[#00a3d4] text-white font-bold px-6 rounded-lg shadow-xs"
           >
-            {isLastQuestion ? "Save & View Summary" : "Save & Next"}
-            <ChevronRight className="w-4 h-4 ml-1.5" />
+            {isLastQuestion ? "Finish Test" : "अगला / Next"}
           </Button>
         </div>
       </div>

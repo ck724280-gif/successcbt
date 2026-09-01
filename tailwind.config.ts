@@ -9,29 +9,29 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        primary: {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
-          950: "#172554",
+        background: "#f4f6f8",
+        foreground: "#1f242e",
+        testbook: {
+          sidebar: "#1f242e",
+          sidebarHover: "#282e3b",
+          sidebarActive: "#141820",
+          teal: "#0097a7",
+          tealDark: "#0e6065",
+          tealLight: "#e0f7fa",
+          cyan: "#00baf2",
+          cyanHover: "#00a3d4",
+          cyanLight: "#e5f7fd",
+          green: "#22c55e",
+          greenLight: "#dcfce7",
+          greenDark: "#15803d",
+          red: "#ef4444",
+          redLight: "#fee2e2",
+          yellow: "#eab308",
+          yellowLight: "#fef9c3",
+          purple: "#6366f1",
+          cardHeader: "#f9fafb",
+          border: "#e5e7eb",
         },
-        cbt: {
-          answered: "#22c55e",       // Green
-          notAnswered: "#ef4444",    // Red
-          marked: "#a855f7",         // Purple
-          markedAnswered: "#8b5cf6", // Purple with check
-          notVisited: "#e2e8f0",     // Gray
-          reviewText: "#7e22ce",
-        }
       },
     },
   },

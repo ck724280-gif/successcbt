@@ -501,6 +501,8 @@ export default function CBTExamPage() {
           items={paletteItems}
           currentQuestionIndex={currentIndex}
           onSelectQuestion={handleSelectQuestion}
+          onOpenQuestionPaper={() => setIsQuestionPaperOpen(true)}
+          onSubmitClick={() => setIsSubmitConfirmOpen(true)}
         />
       </main>
 

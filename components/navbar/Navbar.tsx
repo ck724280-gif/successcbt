@@ -5,25 +5,27 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
-  BookOpen,
-  LayoutDashboard,
-  ShieldAlert,
-  LogOut,
-  User,
-  Menu,
-  X,
-  History,
+  Search,
+  ChevronDown,
+  Globe,
+  Bell,
   CheckCircle2,
+  Ticket,
+  User,
+  LogOut,
+  LayoutDashboard,
+  History,
+  ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [goal, setGoal] = useState("SSC Exams");
 
-  // If on the CBT exam test taking screen, do not show standard header to preserve full exam immersion
+  // If in CBT exam mode, do not render top bar
   if (pathname?.startsWith("/test/")) {
     return null;
   }
@@ -31,135 +33,124 @@ export function Navbar() {
   const isAdmin = session?.user?.role === "ADMIN";
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand Logo */}
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2.5 font-black text-xl text-slate-900 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="tracking-tight text-lg leading-none font-extrabold text-blue-700">
-                PARIKSHA<span className="text-slate-900">CBT</span>
+    <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-200 select-none shadow-xs">
+      <div className="flex h-14 items-center justify-between px-4 sm:px-6 gap-4">
+        {/* Left Goal / Supercoaching */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 cursor-pointer group">
+            <span className="font-extrabold text-sm text-pink-600 tracking-tight flex items-center gap-1">
+              <span className="w-4 h-4 rounded-full bg-pink-600 text-white flex items-center justify-center text-[10px] font-black">
+                S
               </span>
-              <span className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
-                Online Test Series
-              </span>
+              Supercoaching
+            </span>
+            <div className="flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 border border-slate-200 rounded-lg px-2.5 py-1 bg-slate-50">
+              <span>{goal}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
             </div>
-          </Link>
-
-          {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-            <Link
-              href="/exams"
-              className={`transition-colors hover:text-blue-600 ${
-                pathname === "/exams" || pathname?.startsWith("/exams/")
-                  ? "text-blue-600 font-semibold"
-                  : "text-slate-600"
-              }`}
-            >
-              Exams & Categories
-            </Link>
-            <Link
-              href="/dashboard"
-              className={`transition-colors hover:text-blue-600 ${
-                pathname === "/dashboard"
-                  ? "text-blue-600 font-semibold"
-                  : "text-slate-600"
-              }`}
-            >
-              My Dashboard
-            </Link>
-            <Link
-              href="/dashboard/history"
-              className={`transition-colors hover:text-blue-600 ${
-                pathname === "/dashboard/history"
-                  ? "text-blue-600 font-semibold"
-                  : "text-slate-600"
-              }`}
-            >
-              Attempt History
-            </Link>
-          </nav>
+          </div>
         </div>
 
-        {/* Right Section / User actions */}
-        <div className="hidden md:flex items-center gap-3">
-          {isAdmin && (
-            <Link href="/admin">
-              <Button variant="outline" size="sm" className="border-amber-300 bg-amber-50/50 text-amber-900 hover:bg-amber-100 font-semibold gap-1.5">
-                <ShieldAlert className="w-4 h-4 text-amber-600" />
-                Admin Panel
-              </Button>
-            </Link>
-          )}
+        {/* Center Search Bar (Testbook Style) */}
+        <div className="hidden md:flex flex-1 max-w-xl mx-4">
+          <div className="relative w-full">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search for your Exam, Test Series or Topic..."
+              className="w-full pl-10 pr-4 py-1.5 text-xs sm:text-sm rounded-full border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00baf2] focus:border-transparent transition-all"
+            />
+          </div>
+        </div>
 
+        {/* Right Action Icons & Profile */}
+        <div className="flex items-center gap-3">
+          {/* Language Toggle with icon */}
+          <div className="hidden sm:flex items-center gap-1 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 cursor-pointer hover:bg-slate-100">
+            <span className="text-[11px] font-bold bg-blue-100 text-blue-800 px-1 rounded">
+              अ/E
+            </span>
+            <span>All Languages</span>
+            <ChevronDown className="w-3 h-3 text-slate-400" />
+          </div>
+
+          {/* Pass Active Pill */}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-bold text-emerald-700">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Pass Active</span>
+          </div>
+
+          {/* Notifications Bell */}
+          <button className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full">
+            <Bell className="w-4 h-4" />
+          </button>
+
+          {/* User Profile / Auth */}
           {status === "authenticated" && session?.user ? (
             <div className="relative">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2.5 p-1.5 rounded-full hover:bg-slate-100 transition-colors border border-slate-200"
+                className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 transition-colors"
               >
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
+                <div className="w-8 h-8 rounded-full bg-[#00baf2] text-white flex items-center justify-center font-bold text-xs shadow-sm">
                   {session.user.name?.charAt(0).toUpperCase() || "U"}
                 </div>
-                <span className="text-sm font-semibold text-slate-800 pr-2">
+                <span className="hidden md:inline text-xs font-bold text-slate-800">
                   {session.user.name?.split(" ")[0]}
                 </span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
 
-              {/* Dropdown Menu */}
               {isUserMenuOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95 duration-100"
                   onMouseLeave={() => setIsUserMenuOpen(false)}
                 >
                   <div className="px-4 py-2 border-b border-slate-100">
-                    <p className="text-xs text-slate-400 font-medium">Signed in as</p>
-                    <p className="text-sm font-bold text-slate-800 truncate">{session.user.email}</p>
-                    <span className="inline-block mt-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                      {session.user.role}
-                    </span>
+                    <p className="text-[11px] text-slate-400 font-semibold">Account</p>
+                    <p className="text-xs font-bold text-slate-900 truncate">{session.user.name}</p>
+                    <p className="text-[11px] text-slate-500 truncate">{session.user.email}</p>
                   </div>
 
                   <Link
                     href="/dashboard"
                     onClick={() => setIsUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                   >
-                    <LayoutDashboard className="w-4 h-4 text-slate-500" />
-                    Dashboard
+                    <LayoutDashboard className="w-3.5 h-3.5 text-slate-400" />
+                    My Dashboard
                   </Link>
 
                   <Link
                     href="/dashboard/history"
                     onClick={() => setIsUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                   >
-                    <History className="w-4 h-4 text-slate-500" />
-                    Test History & Analysis
+                    <History className="w-3.5 h-3.5 text-slate-400" />
+                    Attempted Tests & Analysis
                   </Link>
 
-                  <Link
-                    href="/dashboard/profile"
-                    onClick={() => setIsUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
-                  >
-                    <User className="w-4 h-4 text-slate-500" />
-                    Profile Settings
-                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-amber-700 bg-amber-50/50 hover:bg-amber-100/50"
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                      Admin Control Panel
+                    </Link>
+                  )}
 
-                  <div className="border-t border-slate-100 my-1"></div>
+                  <div className="border-t border-slate-100 my-1" />
 
                   <button
                     onClick={() => {
                       setIsUserMenuOpen(false);
                       signOut({ callbackUrl: "/" });
                     }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 text-left"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-3.5 h-3.5" />
                     Sign Out
                   </button>
                 </div>
@@ -168,91 +159,19 @@ export function Navbar() {
           ) : (
             <div className="flex items-center gap-2">
               <Link href="/login">
-                <Button variant="ghost" size="sm" className="font-semibold text-slate-700">
+                <Button size="sm" variant="ghost" className="text-xs font-bold text-slate-700">
                   Log In
                 </Button>
               </Link>
               <Link href="/register">
-                <Button variant="primary" size="sm" className="font-semibold shadow-sm">
-                  Register Free
+                <Button size="sm" className="text-xs font-bold bg-[#00baf2] hover:bg-[#00a3d4] text-white">
+                  Join Free
                 </Button>
               </Link>
             </div>
           )}
         </div>
-
-        {/* Mobile menu button */}
-        <div className="flex md:hidden items-center gap-2">
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100"
-          >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
       </div>
-
-      {/* Mobile Drawer */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-6 space-y-3">
-          <Link
-            href="/exams"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-base font-semibold text-slate-700"
-          >
-            Exams & Mock Tests
-          </Link>
-          <Link
-            href="/dashboard"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-base font-semibold text-slate-700"
-          >
-            My Dashboard
-          </Link>
-          <Link
-            href="/dashboard/history"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block py-2 text-base font-semibold text-slate-700"
-          >
-            Attempt History
-          </Link>
-
-          {isAdmin && (
-            <Link
-              href="/admin"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block py-2 text-base font-semibold text-amber-700"
-            >
-              Admin Dashboard
-            </Link>
-          )}
-
-          <div className="pt-4 border-t border-slate-100">
-            {status === "authenticated" ? (
-              <Button
-                variant="outline"
-                className="w-full text-red-600 border-red-200 justify-center"
-                onClick={() => signOut({ callbackUrl: "/" })}
-              >
-                Sign Out
-              </Button>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full justify-center">
-                    Log In
-                  </Button>
-                </Link>
-                <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button variant="primary" className="w-full justify-center">
-                    Register
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </header>
   );
 }
